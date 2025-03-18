@@ -1,0 +1,113 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  /* Login Container */
+  .login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+  }
+  
+  /* Login Box */
+  .login-box {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 380px;
+  }
+  
+  h2 {
+    color: #1e3a8a;
+    margin-bottom: 25px;
+    font-size: 22px;
+  }
+  
+  /* Role Selection */
+  .role-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  .role-button {
+    padding: 10px 20px;
+    border: 2px solid #1e3a8a;
+    border-radius: 6px;
+    cursor: pointer;
+    background: white;
+    color: #1e3a8a;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .role-button:hover {
+    background: #1e3a8a;
+    color: white;
+  }
+  
+  .role-button.active {
+    background: #1e3a8a;
+    color: white;
+    font-weight: bold;
+  }
+  
+  /* Input Fields */
+  .input-field {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+  }
+  
+  /* Login Button */
+  .login-btn {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: 600;
+    width: 100%;
+    transition: background 0.3s;
+  }
+  
+  .login-btn:hover {
+    background: #e68900;
+  }
+  
+  /* Signup Link */
+  .signup-text {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .signup-text a {
+    color: #1e3a8a;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  .signup-text a:hover {
+    text-decoration: underline;
+  }
+  
