@@ -1,20 +1,36 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const authRoutes = require("./routes/auth");
+const express = require('express');
+const mysql = require('mysql2');
 
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
+const PORT = 5173;
 
-app.use("/auth", authRoutes);
 
-app.get("/", (req, res) => {
-  res.send("Backend is running...");
-});
-
-const PORT = process.env.PORT || 8081;
-app.listen(PORT, () => {
-  console.log(Server running on port ${PORT});
-});
+// MySQL Connection
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'S@ilu123',
+    database: 'resume_analyzer'
+  });
+  
+  db.connect((err) => {
+    if (err) {
+      console.error('❌ MySQL Connection Failed:', err);
+    } else {
+      console.log('✅ MySQL Connected Successfully!');
+  
+      // Test Query
+      db.query('SELECT 1 + 1 AS solution', (err, results) => {
+        if (err) {
+          console.error('❌ Query Failed:', err);
+        } else {
+          console.log('✅ Query Success:', results[0].solution); // Should log "2"
+        }
+      });
+    }
+  });
+  
+  // Start Server
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
