@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { FaUpload } from 'react-icons/fa';
 import "./jobdashboard.css";
+import ChatlingWidget from './ChatlingWidget';
 
 const Jobdashboard = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -52,6 +53,8 @@ const Jobdashboard = () => {
           </ul>
         </div>
       )}
+    
+    <ChatlingWidget />
     </div>
   );
 };
