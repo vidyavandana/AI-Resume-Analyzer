@@ -5,17 +5,23 @@ import Recruiter from "./pages/Recruiter";
 import JobSeeker from "./pages/JobSeeker";
 import Jobdashboard from "./pages/Jobdashboard";
 import Recruiterdashboard from "./pages/Recruiterdashboard";
+import ChatlingWidget from "./pages/ChatlingWidget.jsx"; // Chatling bot
+
+
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<WelcomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/JobSeeker" element={<JobSeeker />} />s
-        <Route path="/Jobdashboard" element={<Jobdashboard />} />
-        <Route path="/recruiter" element={<Recruiter />} />
-        <Route path="/Recruiterdashboard" element={<Recruiterdashboard />} />
-      </Routes>
+      <div>
+        <Routes>
+          <Route path="/" element={<WelcomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/JobSeeker" element={<JobSeeker />} />
+          <Route path="/Jobdashboard" element={<Jobdashboard />} />
+          <Route path="/recruiter" element={<Recruiter />} />
+          <Route path="/Recruiterdashboard" element={<Recruiterdashboard />} />
+        </Routes>
+      
+      </div>
     </Router>
   );
 }

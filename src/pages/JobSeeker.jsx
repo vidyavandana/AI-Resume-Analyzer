@@ -84,6 +84,7 @@ const Recruiter = () => {
         />
       </section>
     </motion.div>
+     
   );
 };
 
