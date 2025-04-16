@@ -1,5 +1,3 @@
-// Jobdashboard.jsx
-
 import React, { useState } from 'react';
 import { FaUpload } from 'react-icons/fa';
 import "./jobdashboard.css";
@@ -19,12 +17,31 @@ const Jobdashboard = () => {
       return;
     }
 
-    // Simulated API Call
-    setRecommendations({
-      skills: ['JavaScript', 'React', 'Node.js'],
-      score: 85,
-      tips: ['Customize your resume for the role', 'Use clear and concise language']
-    });
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await fetch('http://localhost:8000/parse-resume', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch recommendations');
+      }
+
+      const data = await response.json();
+      setRecommendations({
+        skills: data.skills,
+        score: data.score,
+        tips: data.improvements,
+        video: data.video_recommendation,
+        predicted_role: data.predicted_role
+      });
+    } catch (error) {
+      console.error(error);
+      alert('Error analyzing resume. Please try again.');
+    }
   };
 
   return (
@@ -40,22 +57,29 @@ const Jobdashboard = () => {
       </div>
 
       {recommendations && (
-        <div className="recommendations">
-          <h2>Your Recommendations</h2>
-          <p><b>Skills to Add:</b> {recommendations.skills.join(', ')}</p>
-          <p><b>Overall Score:</b> {recommendations.score}%</p>
-          <p><b>Tips:</b></p>
-          <ul>
-            {recommendations.tips.map((tip, index) => (
-              <li key={index}>{tip}</li>
-            ))}
-          </ul>
-        </div>
+        <>
+          <div className="recommendations">
+            <h2>Your Recommendations</h2>
+            <p><b>Skills to Add:</b> {recommendations.skills?.join(', ')}</p>
+            <p><b>Overall Score:</b> {recommendations.score}%</p>
+            <p><b>Tips:</b></p>
+            <ul>
+              {recommendations.tips?.map((tip, index) => (
+                <li key={index}>{tip}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="video-section">
+            <h3>Suggested Role: {recommendations.predicted_role}</h3>
+            <p>Watch this video to learn more:</p>
+            <a href={recommendations.video} target="_blank" rel="noopener noreferrer">{recommendations.video}</a>
+          </div>
+        </>
       )}
     </div>
   );
 };
 
 export default Jobdashboard;
-
 
