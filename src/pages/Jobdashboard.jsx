@@ -6,6 +6,7 @@ import ChatlingWidget from './ChatlingWidget';
 const Jobdashboard = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
+  const [loading, setLoading] = useState(false); // New loading state
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -17,6 +18,8 @@ const Jobdashboard = () => {
       alert('Please upload a resume!');
       return;
     }
+
+    setLoading(true); // Start loading
 
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -42,6 +45,8 @@ const Jobdashboard = () => {
     } catch (error) {
       console.error(error);
       alert('Error analyzing resume. Please try again.');
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -54,7 +59,9 @@ const Jobdashboard = () => {
           <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} />
         </label>
         {selectedFile && <p>Uploaded: {selectedFile.name}</p>}
-        <button onClick={handleSubmit}>Get Recommendations</button>
+        <button onClick={handleSubmit} disabled={loading}>
+          {loading ? 'Analyzing Resume...' : 'Get Recommendations'}
+        </button>
       </div>
 
       {recommendations && (
@@ -79,10 +86,9 @@ const Jobdashboard = () => {
         </>
       )}
     
-    <ChatlingWidget />
+      <ChatlingWidget />
     </div>
   );
 };
 
 export default Jobdashboard;
-

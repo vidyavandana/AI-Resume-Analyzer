@@ -2,9 +2,9 @@ import time
 import datetime
 import os
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from tempfile import NamedTemporaryFile
 from .resume_parser import ResumeParser
-
 
 app = FastAPI()
 
@@ -50,65 +50,72 @@ video_recommendations = {
 
 @app.post("/parse-resume")
 async def analyze_resume(file: UploadFile = File(...)):
-    contents = await file.read()
+    # Validate the file type
+    if not file.filename.endswith(('.pdf', '.doc', '.docx')):
+        raise HTTPException(status_code=400, detail="Invalid file type. Only .pdf, .doc, and .docx files are allowed.")
 
-    # Save the uploaded file temporarily
-    with open("temp_resume_file", "wb") as temp_file:
-        temp_file.write(contents)
+    # Save the uploaded file temporarily with a unique name
+    try:
+        with NamedTemporaryFile(delete=False) as temp_file:
+            temp_file.write(await file.read())
+            temp_filename = temp_file.name
 
-    # Reopen the saved file in binary mode to pass into ResumeParser
-    resume = ResumeParser("temp_resume_file", skills_file="skills.csv")
-    resume_data = resume.get_extracted_data()
-    resume_data['text'] = contents.decode('utf-8', errors='ignore')
-    predicted_role = predict_role(resume_data)
-    resume_data['predicted_role'] = predicted_role
+        # Process the file with ResumeParser
+        resume = ResumeParser(temp_filename, skills_file="skills.csv")
+        resume_data = resume.get_extracted_data()
+        resume_data['text'] = open(temp_filename, 'r', errors='ignore').read()  # Read the resume content for analysis
+        predicted_role = predict_role(resume_data)
+        resume_data['predicted_role'] = predicted_role
 
-    resume_text = resume_data.get('text', '').lower()
-    improvements = []
-    resume_score = 0
+        # Scoring the resume sections
+        resume_text = resume_data.get('text', '').lower()
+        improvements = []
+        resume_score = 0
 
-    section_scores = {
-        'objective': 6,
-        'education': 12,
-        'experience': 16,
-        'internships': 6,
-        'skills': 7,
-        'hobbies': 4,
-        'interests': 5,
-        'achievements': 13,
-        'certifications': 12,
-        'projects': 19,
-    }
+        section_scores = {
+            'objective': 6,
+            'education': 12,
+            'experience': 16,
+            'internships': 6,
+            'skills': 7,
+            'hobbies': 4,
+            'interests': 5,
+            'achievements': 13,
+            'certifications': 12,
+            'projects': 19,
+        }
 
-    section_keywords = {
-        'objective': ['objective', 'summary'],
-        'education': ['education', 'school', 'college'],
-        'experience': ['experience'],
-        'internships': ['internship', 'internships'],
-        'skills': ['skills', 'skill'],
-        'hobbies': ['hobbies'],
-        'interests': ['interests'],
-        'achievements': ['achievements'],
-        'certifications': ['certifications', 'certification'],
-        'projects': ['projects', 'project'],
-    }
+        section_keywords = {
+            'objective': ['objective', 'summary'],
+            'education': ['education', 'school', 'college'],
+            'experience': ['experience'],
+            'internships': ['internship', 'internships'],
+            'skills': ['skills', 'skill'],
+            'hobbies': ['hobbies'],
+            'interests': ['interests'],
+            'achievements': ['achievements'],
+            'certifications': ['certifications', 'certification'],
+            'projects': ['projects', 'project'],
+        }
 
-    for section, keywords in section_keywords.items():
-        if any(keyword in resume_text for keyword in keywords):
-            resume_score += section_scores[section]
-        else:
-            improvements.append(f"Please consider adding your {section} section to enhance your resume.")
+        for section, keywords in section_keywords.items():
+            if any(keyword in resume_text for keyword in keywords):
+                resume_score += section_scores[section]
+            else:
+                improvements.append(f"Please consider adding your {section} section to enhance your resume.")
 
-    resume_data['score'] = resume_score
-    resume_data['improvements'] = improvements
-    resume_data['video_recommendation'] = video_recommendations.get(predicted_role, "https://www.youtube.com/results?search_query=how+to+make+a+resume")
+        resume_data['score'] = resume_score
+        resume_data['improvements'] = improvements
+        resume_data['video_recommendation'] = video_recommendations.get(predicted_role, "https://www.youtube.com/results?search_query=how+to+make+a+resume")
 
-    # Clean up the temporary file
-    os.remove("temp_resume_file")
+        # Return resume data
+        return resume_data
 
-    ts = time.time()
-    cur_date = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
-    cur_time = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
-    timestamp = str(cur_date + '_' + cur_time)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error processing the resume: " + str(e))
 
-    return resume_data
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
+

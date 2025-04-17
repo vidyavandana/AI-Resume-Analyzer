@@ -1,82 +1,93 @@
-import React from "react";
-import "@fortawesome/fontawesome-free/css/all.min.css";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import hireImage from "../assets/img/hire3.webp";
+import React, { useState } from "react";
 import "./Recruiterdashboard.css";
+import axios from "axios";
+
 const Recruiterdashboard = () => {
-    const features = [
-      {
-        icon: "⚡",
-        title: "Resume Hiring",
-        description:
-          "Helpful for recruiters by saving time and making the hiring process quicker and more efficient.",
-      },
-      {
-        icon: "💼",
-        title: "Download Resume",
-        description:
-          "Download resumes to help you shortlist candidates efficiently.",
-      },
-      {
-        icon: "📄",
-        title: "Search Resume",
-        description:
-          "Find resumes that match your job descriptions quickly and easily.",
-      },
-    ];
-  
-    return (
-      <div>
-        {/* Navigation Bar */}
-        <header className="navbar">
-          <motion.div 
-            className="logo"
-            initial={{ x: -100 }} 
-            animate={{ x: 0 }} 
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            HireSync
-          </motion.div>
-          <nav>
-            <ul>
-              <motion.li initial={{ y: -50 }} animate={{ y: 0 }} transition={{ duration: 0.8 }}>
-                <Link to="/">About HireSync</Link>
-              </motion.li>
-              <motion.li initial={{ y: -50 }} animate={{ y: 0 }} transition={{ duration: 1 }}>
-                <Link to="/recruiter">Recruiters</Link>
-              </motion.li>
-              <motion.li initial={{ y: -50 }} animate={{ y: 0 }} transition={{ duration: 1.2 }}>
-                <Link to="/JobSeeker">Job Seekers</Link>
-              </motion.li>
-              <motion.li initial={{ y: -50 }} animate={{ y: 0 }} transition={{ duration: 1.4 }}>
-                <Link to="/">Contact Us</Link> 
-              </motion.li>
-            </ul>
-          </nav>
-        </header>
-  
-        {/* Features Section */}
-        <div className="features-container">
-          <h2 className="section-title">Recruiter Features</h2>
-          <div className="features-grid">
-            {features.map((feature, index) => (
-              <motion.div 
-                key={index} 
-                className="feature-card"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="feature-icon">{feature.icon}</div>
-                <h3 className="feature-title">{feature.title}</h3>
-                <p className="feature-description">{feature.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  const [jobDesc, setJobDesc] = useState("");
+  const [resumes, setResumes] = useState([]);
+  const [count, setCount] = useState(1);
+  const [shortlisted, setShortlisted] = useState([]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("job_description", jobDesc);
+    formData.append("candidate_count", count);
+
+    for (let i = 0; i < resumes.length; i++) {
+      formData.append("resumes", resumes[i]);
+    }
+
+    try {
+      const res = await axios.post("http://127.0.0.1:8000/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setShortlisted(res.data);
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
   };
-  
-  export default Recruiterdashboard;
-  
+
+  const handleAccept = async (candidate) => {
+    try {
+      // Send the accepted candidate to the backend to store in CSV
+      await axios.post("http://127.0.0.1:8000/accept_candidate", candidate);
+      alert(`Candidate ${candidate.name} added successfully to CSV`);
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  };
+
+  const handleReject = (candidate) => {
+    alert(`Application from ${candidate.name} has been rejected.`);
+  };
+
+  return (
+    <div className="form-container">
+      <h2>Smart Resume Shortlisting</h2>
+      <form onSubmit={handleSubmit}>
+        <textarea
+          placeholder="Enter Job Description"
+          value={jobDesc}
+          onChange={(e) => setJobDesc(e.target.value)}
+          rows="6"
+        />
+        <input
+          type="file"
+          multiple
+          onChange={(e) => setResumes(e.target.files)}
+        />
+        <input
+          type="number"
+          value={count}
+          onChange={(e) => setCount(e.target.value)}
+          min="1"
+        />
+        <button type="submit">Shortlist Candidates</button>
+      </form>
+
+      {shortlisted.length > 0 && (
+        <div className="results">
+          <h3>Shortlisted Candidates</h3>
+          <ul>
+            {shortlisted.map((c, idx) => (
+              <li key={idx}>
+                <strong>{idx + 1}. {c.name}</strong><br />
+                Email: {c.email}<br />
+                PDF_Name: {c.pdf_name} <br />
+                Match: {c.score}%<br />
+                <button onClick={() => handleAccept(c)}>Accept</button>
+                <button onClick={() => handleReject(c)}>Reject</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Recruiterdashboard;

@@ -29,6 +29,7 @@ class ResumeParser(object):
         }
         self.__resume = resume
 
+        # Handle both file and in-memory byte stream
         if not isinstance(self.__resume, io.BytesIO):
             ext = os.path.splitext(self.__resume)[1].split('.')[1]
         else:
@@ -72,27 +73,25 @@ class ResumeParser(object):
 
 
 def resume_result_wrapper(resume):
-    parser = ResumeParser(resume)
-    return parser.get_extracted_data()
+    try:
+        parser = ResumeParser(resume)
+        return parser.get_extracted_data()
+    except Exception as e:
+        print(f"Error processing {resume}: {e}")
+        return None
 
 
 if __name__ == '__main__':
-    pool = mp.Pool(mp.cpu_count())
-
     resumes = []
-    data = []
     for root, directories, filenames in os.walk('resumes'):
         for filename in filenames:
             file = os.path.join(root, filename)
             resumes.append(file)
 
-    results = [
-        pool.apply_async(
-            resume_result_wrapper,
-            args=(x,)
-        ) for x in resumes
-    ]
+    with mp.Pool(mp.cpu_count()) as pool:
+        results = pool.map(resume_result_wrapper, resumes)
 
-    results = [p.get() for p in results]
+    # Filter out None results (failed resume parsing)
+    results = [result for result in results if result is not None]
 
     pprint.pprint(results)
