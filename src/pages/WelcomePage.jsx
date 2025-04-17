@@ -1,3 +1,4 @@
+// WelcomePage.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -49,6 +50,7 @@ const MissionVision = () => {
 export default function WelcomePage() {
   const navigate = useNavigate();
 
+  // State for signup form
   const [role, setRole] = useState("jobseeker");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -69,7 +71,9 @@ export default function WelcomePage() {
     }
 
     try {
+      // Pass role to the register function
       const res = await register(name, email, password, role);
+      console.log("Signup response:", res);
       if (res.message === "User registered successfully") {
         alert("Signup successful! Please login.");
         navigate("/login");
@@ -88,8 +92,8 @@ export default function WelcomePage() {
       <header className="navbar">
         <motion.div 
           className="logo"
-          initial={{ x: -100 }} 
-          animate={{ x: 0 }} 
+          initial={{ x: -100 }}
+          animate={{ x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           HireSync
@@ -130,51 +134,37 @@ export default function WelcomePage() {
           <div className="signup-box">
             <h2>Join <strong><em>HireSync</em></strong></h2>
             <form onSubmit={handleSignup}>
-              <div className="role-buttons">
-                <button
-                  type="button"
-                  className={`role-button ${role === "recruiter" ? "active" : ""}`}
-                  onClick={() => setRole("recruiter")}
-                >
-                  Recruiter
-                </button>
-                <button
-                  type="button"
-                  className={`role-button ${role === "jobseeker" ? "active" : ""}`}
-                  onClick={() => setRole("jobseeker")}
-                >
-                  Job Seeker
-                </button>
-              </div>
-              <input 
-                type="text" 
-                placeholder="Username" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
-                required 
+              <input
+                type="text"
+                placeholder="Username"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
               />
-              <input 
-                type="email" 
-                placeholder="Email Address" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                required 
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
-              <input 
-                type="password" 
-                placeholder="Password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                required 
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
               />
-              <input 
-                type="password" 
-                placeholder="Confirm Password" 
-                value={confirmPassword} 
-                onChange={(e) => setConfirmPassword(e.target.value)} 
-                required 
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
               />
-              <button type="submit" className="signup-btn">Sign Up</button>
+              <button type="submit" className="signup-btn">
+                Sign Up
+              </button>
             </form>
             <p className="black-content">
               Already have an account? <Link to="/login">Log in</Link>
@@ -184,7 +174,7 @@ export default function WelcomePage() {
 
         {/* Image Section */}
         <div className="right-section">
-          <img className="image-struct" src={hireImage} alt="hiresync" />
+          <img className="image-struct" src={hireImage} alt="HireSync" />
         </div>
       </div>
 
@@ -196,17 +186,23 @@ export default function WelcomePage() {
           <div className="contact-item">
             <i className="fas fa-envelope"></i>
             <h3>Email Us</h3>
-            <p>For any inquiries, reach us at <a href="mailto:support@example.com">support@example.com</a></p>
+            <p>
+              For any inquiries, reach us at <a href="mailto:support@example.com">support@example.com</a>
+            </p>
           </div>
           <div className="contact-item">
             <i className="fas fa-phone-alt"></i>
             <h3>Call Us</h3>
-            <p>Reach us at <a href="tel:+918309681559">+91 8309681559</a></p>
+            <p>
+              Reach us at <a href="tel:+918309681559">+91 8309681559</a>
+            </p>
           </div>
           <div className="contact-item">
             <i className="fab fa-instagram"></i>
             <h3>Instagram</h3>
-            <p>Follow us <a href="https://instagram.com/hiresync">@Hiresync</a></p>
+            <p>
+              Follow us <a href="https://instagram.com/hiresync">@HireSync</a>
+            </p>
           </div>
         </div>
       </footer>
