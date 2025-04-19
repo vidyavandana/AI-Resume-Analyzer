@@ -1,97 +1,59 @@
-import os
-import multiprocessing as mp
-import io
+import pdfplumber
 import spacy
-import pprint
-from spacy.matcher import Matcher
-from . import utils
 
+class ResumeParser:
+    def __init__(self, resume_path):
+        self.resume_path = resume_path
+        self.text = self.extract_text()
+        self.doc = spacy.load("en_core_web_sm")(self.text)
 
-class ResumeParser(object):
+    def extract_text(self):
+        text = ""
+        try:
+            with pdfplumber.open(self.resume_path) as pdf:
+                for page_num, page in enumerate(pdf.pages):
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+                    else:
+                        print(f"[Warning] Page {page_num + 1} has no extractable text.")
+        except Exception as e:
+            print("❌ Error extracting text from PDF:", e)
+        return text.lower()
 
-    def __init__(
-        self,
-        resume,
-        skills_file=None,
-        custom_regex=None
-    ):
-        nlp = spacy.load('en_core_web_sm')
-        self.__skills_file = skills_file
-        self.__custom_regex = custom_regex
-        self.__matcher = Matcher(nlp.vocab)
-        self.__details = {
-            'name': None,
-            'email': None,
-            'mobile_number': None,
-            'skills': None,
-            'degree': None,
-            'no_of_pages': None,
-        }
-        self.__resume = resume
+    def extract_skills(self):
+        self.skills_keywords = [
+            "python", "java", "c++", "html", "css", "javascript", "sql", "excel",
+            "react", "node", "tensorflow", "keras", "pandas", "numpy", "machine learning",
+            "deep learning", "data analysis", "android", "ux", "ui"
+        ]
+        found = []
+        for token in self.doc:
+            if token.text.lower() in self.skills_keywords:
+                found.append(token.text.lower())
+        return list(set(found))
 
-        # Handle both file and in-memory byte stream
-        if not isinstance(self.__resume, io.BytesIO):
-            ext = os.path.splitext(self.__resume)[1].split('.')[1]
-        else:
-            ext = self.__resume.name.split('.')[-1]
+    def calculate_score(self, extracted_skills):
+        total_possible = len(self.skills_keywords)
+        matched = len(extracted_skills)
+        return int((matched / total_possible) * 100) if total_possible > 0 else 0
 
-        self.__text_raw = utils.extract_text(self.__resume, '.' + ext)
-        self.__text = ' '.join(self.__text_raw.split())
-        self.__nlp = nlp(self.__text)
-        self.__noun_chunks = list(self.__nlp.noun_chunks)
-        self.__get_basic_details()
+    def generate_improvements(self, extracted_skills):
+        missing_skills = list(set(self.skills_keywords) - set(extracted_skills))
+        suggestions = []
+        if len(missing_skills) > 0:
+            suggestions.append("Consider adding more relevant technical skills.")
+            suggestions.append(f"Some commonly expected skills missing: {', '.join(missing_skills[:5])}")
+        return suggestions
 
     def get_extracted_data(self):
-        return self.__details
+        skills = self.extract_skills()
+        score = self.calculate_score(skills)
+        improvements = self.generate_improvements(skills)
 
-    def __get_basic_details(self):
-        name = utils.extract_name(self.__nlp, matcher=self.__matcher)
-        email = utils.extract_email(self.__text)
-        mobile = utils.extract_mobile_number(self.__text, self.__custom_regex)
-        skills = utils.extract_skills(
-            self.__nlp,
-            self.__noun_chunks,
-            self.__skills_file
-        )
-
-        # extract name
-        self.__details['name'] = name
-
-        # extract email
-        self.__details['email'] = email
-
-        # extract mobile number
-        self.__details['mobile_number'] = mobile
-
-        # extract skills
-        self.__details['skills'] = skills
-
-        # number of pages
-        self.__details['no_of_pages'] = utils.get_number_of_pages(self.__resume)
-
-        return
-
-
-def resume_result_wrapper(resume):
-    try:
-        parser = ResumeParser(resume)
-        return parser.get_extracted_data()
-    except Exception as e:
-        print(f"Error processing {resume}: {e}")
-        return None
-
-
-if __name__ == '__main__':
-    resumes = []
-    for root, directories, filenames in os.walk('resumes'):
-        for filename in filenames:
-            file = os.path.join(root, filename)
-            resumes.append(file)
-
-    with mp.Pool(mp.cpu_count()) as pool:
-        results = pool.map(resume_result_wrapper, resumes)
-
-    # Filter out None results (failed resume parsing)
-    results = [result for result in results if result is not None]
-
-    pprint.pprint(results)
+        return {
+            "skills": skills,
+            "score": score,
+            "improvements": improvements,
+            "text": self.text
+        }

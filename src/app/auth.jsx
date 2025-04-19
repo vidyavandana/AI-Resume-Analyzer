@@ -1,7 +1,7 @@
 // auth.jsx
 const API_BASE_URL = "http://localhost:5000/auth";
 
-export async function register(name, email, password, role) {
+export async function register(name, email, password) {
   const response = await fetch(`${API_BASE_URL}/register`, {
     method: "POST",
     headers: {

@@ -6,7 +6,8 @@ import ChatlingWidget from './ChatlingWidget';
 const Jobdashboard = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
-  const [loading, setLoading] = useState(false); // New loading state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null); // Add state for errors
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -19,7 +20,8 @@ const Jobdashboard = () => {
       return;
     }
 
-    setLoading(true); // Start loading
+    setLoading(true);
+    setError(null); // Reset any previous errors
 
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -35,18 +37,21 @@ const Jobdashboard = () => {
       }
 
       const data = await response.json();
+      console.log("Parsed resume data:", data); // Debug log to check what we are getting
+
+      // Set recommendations with the backend data
       setRecommendations({
-        skills: data.skills,
-        score: data.score,
-        tips: data.improvements,
-        video: data.video_recommendation,
-        predicted_role: data.predicted_role
+        skills: data.skills || [],
+        score: data.score || 0,
+        tips: data.improvements || [],
+        video: data.video_recommendation || 'No video available',
+        predicted_role: data.predicted_role || 'Role not predicted'
       });
     } catch (error) {
       console.error(error);
-      alert('Error analyzing resume. Please try again.');
+      setError(error.message);  // Display detailed error message to user
     } finally {
-      setLoading(false); // End loading
+      setLoading(false);
     }
   };
 
@@ -64,28 +69,35 @@ const Jobdashboard = () => {
         </button>
       </div>
 
+      {error && <p className="error">{error}</p>} {/* Show error message if any */}
+
       {recommendations && (
-        <>
+        <div className="results-section">
           <div className="recommendations">
             <h2>Your Recommendations</h2>
-            <p><b>Skills to Add:</b> {recommendations.skills?.join(', ')}</p>
-            <p><b>Overall Score:</b> {recommendations.score}%</p>
-            <p><b>Tips:</b></p>
-            <ul>
-              {recommendations.tips?.map((tip, index) => (
-                <li key={index}>{tip}</li>
-              ))}
-            </ul>
+            <p><strong>Skills to Add:</strong> {recommendations.skills.join(', ') || 'None'}</p>
+            <p><strong>Overall Score:</strong> {recommendations.score}%</p>
+            {recommendations.tips.length > 0 && (
+              <ul>
+                {recommendations.tips.map((tip, index) => (
+                  <li key={index}>{tip}</li>
+                ))}
+              </ul>
+            )}
           </div>
 
-          <div className="video-section">
-            <h3>Suggested Role: {recommendations.predicted_role}</h3>
-            <p>Watch this video to learn more:</p>
-            <a href={recommendations.video} target="_blank" rel="noopener noreferrer">{recommendations.video}</a>
-          </div>
-        </>
+          {recommendations.video && (
+            <div className="video-section">
+              <h3>Suggested Role: {recommendations.predicted_role}</h3>
+              <p>Watch this video to learn more:</p>
+              <a href={recommendations.video} target="_blank" rel="noopener noreferrer">
+                {recommendations.video}
+              </a>
+            </div>
+          )}
+        </div>
       )}
-    
+
       <ChatlingWidget />
     </div>
   );
